@@ -6,7 +6,7 @@ export default gql`
     email: String!
   }
   type Query {
-    hello: String!
+    me: User
   }
   input userInput {
     email: String!

@@ -4,7 +4,16 @@ import { IResolverMap } from './types/ResolverType'
 
 const resolvers: IResolverMap = {
   Query: {
-    hello: () => 'Hello, world'
+    me: async (_, __, { req }) => {
+      const userId = req.session.userId
+      if (!userId) return null
+      try {
+        const me = await User.findOne({ id: userId })
+        return me
+      } catch (_) {
+        return null
+      }
+    }
   },
   Mutation: {
     register: async (_, { input: { email, password } }) => {
@@ -20,12 +29,16 @@ const resolvers: IResolverMap = {
         return false
       }
     },
-    login: async (_, { input: { email, password } }) => {
+    login: async (_, { input: { email, password } }, { req }) => {
       try {
         const user = await User.findOne({ email })
         if (!user) return null
         const valid = await bcrypt.compare(password, user.password)
-        return valid ? user : null
+        if (!valid) {
+          return null
+        }
+        req.session.userId = user.id
+        return user
       } catch (e) {
         console.log(e)
         return null

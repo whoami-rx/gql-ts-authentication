@@ -3,13 +3,26 @@ import * as express from 'express'
 import typeDefs from './schema'
 import resolvers from './resolvers'
 import { createConnection } from 'typeorm'
+import * as session from 'express-session'
 
 const startServer = async () => {
   const server = new ApolloServer({
     typeDefs,
-    resolvers
+    resolvers,
+    context: ({ req }) => ({ req })
   })
   const app = express()
+  app.use(
+    session({
+      secret: 'best_secret',
+      saveUninitialized: false,
+      resave: false,
+      cookie: {
+        maxAge: 3600000,
+        expires: new Date(Date.now() + 3600000)
+      }
+    })
+  )
   server.applyMiddleware({ app })
   try {
     await createConnection()
